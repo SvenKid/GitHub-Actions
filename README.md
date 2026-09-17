@@ -76,6 +76,8 @@ Workflow использует `contents: read`; собственные токе�
 
 ## Документация
 
+- [Результаты проверок и запуски CI](RUNS.md)
+- [Отчёт по заданию (Word)](docs/GitHub_Actions_Report.docx)
 - [Сборка Java-проекта с Maven в GitHub Actions](https://docs.github.com/en/actions/tutorials/build-and-test-code/java-with-maven)
 - [Жизненный цикл Maven](https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html)
 - [JUnit 5](https://docs.junit.org/5.11.4/user-guide/)
