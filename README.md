@@ -1,56 +1,81 @@
-# GitHub Actions demo
+# Автоматизация сборки и тестирования с GitHub Actions
 
 [![Java CI](https://github.com/SvenKid/GitHub-Actions/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SvenKid/GitHub-Actions/actions/workflows/ci.yml)
 
-Variant A for Software Engineering Tools: build and test a small Java application with GitHub Actions.
+Учебный проект по дисциплине «Инструменты программной инженерии», вариант А.
+На примере небольшого калькулятора показана настройка GitHub Actions с нуля:
+сборка приложения, запуск тестов и сохранение готового JAR-файла.
 
-## Application
+## Приложение
 
-The command-line calculator supports addition, subtraction, multiplication and division.
-It rejects division by zero, unknown operations and invalid input.
-The project uses Java 17, Maven and JUnit 5. It has six unit tests.
+Калькулятор работает из командной строки и выполняет сложение, вычитание, умножение и деление.
+При неверных аргументах или делении на ноль он выводит ошибку и завершается с кодом 1.
 
-## Build and run
+Используются Java 17, Maven и JUnit 5. В проекте шесть модульных тестов.
+База данных, веб-сервер и дополнительные сервисы не нужны.
 
-Install a JDK (17 or later), Maven 3.9 and Git. Check `java -version`, `mvn -version` and `git --version`.
+## Запуск
+
+Для работы нужны JDK 17 или новее, Maven 3.9 и Git.
+Проверить установку можно командами `java -version`, `mvn -version` и `git --version`.
 
 ```text
 git clone https://github.com/SvenKid/GitHub-Actions.git
 cd GitHub-Actions
 mvn --batch-mode --no-transfer-progress clean verify
 java -jar target/calculator-1.0.0.jar add 2 3
-java -jar target/calculator-1.0.0.jar div 5 2
 ```
 
-Expected results: `Result: 5.0` and `Result: 2.5`.
-Use `sub`, `mul` or `div` for other operations. For example, `div 10 0` prints an error and exits with code 1.
+Последняя команда выводит `Result: 5.0`. Другие примеры:
 
-In IntelliJ IDEA, open `pom.xml` as a project. Select a JDK 17 or later and reload Maven.
-You can run `clean` and `verify` from the Maven tool window without a separate Maven installation.
-To run `Main`, set its program arguments to `add 2 3`.
+```text
+java -jar target/calculator-1.0.0.jar sub 8 3
+java -jar target/calculator-1.0.0.jar mul -3 4
+java -jar target/calculator-1.0.0.jar div 5 2
+java -jar target/calculator-1.0.0.jar div 10 0
+```
 
-## GitHub Actions
+Результаты: `5.0`, `-12.0`, `2.5` и сообщение `Cannot divide by zero.`.
+Дробные числа вводятся с точкой.
 
-The configuration is `.github/workflows/ci.yml`. It runs on pushes to `main` and `demo/**`,
-on pull requests into `main`, and on a manual start from the Actions tab.
+В IntelliJ IDEA откройте `pom.xml` как Maven-проект и выберите JDK 17 или новее.
+В окне Maven можно выполнить `clean` и `verify`, используя встроенный Maven.
+Для запуска класса `Main` из IDE укажите аргументы программы, например `add 2 3`.
 
-One Ubuntu job checks out the code, sets up Java 17, restores the Maven cache,
-runs `clean verify`, and starts the application. A successful run saves a runnable JAR.
-Test reports are uploaded even if a test fails. Artifacts are kept for 14 days.
-The workflow needs read access to repository contents; no personal token or extra secret is required.
+## Как работает CI
 
-Open **Actions → Java CI → a run** to see the steps, logs and artifacts.
-The JAR artifact is a ZIP: extract it and run the JAR with Java 17 or later.
-This project demonstrates CI. It does not deploy an application to a server.
+Файл `.github/workflows/ci.yml` задаёт один job на Ubuntu. Он запускается:
 
-## Live demo
+- при отправке изменений в `main` или ветки `demo/**`;
+- при создании и обновлении pull request в `main`;
+- вручную через **Actions → Java CI → Run workflow**.
 
-See [DEMO.md](DEMO.md) for the English script, failure scenario and questions.
-See [WINDOWS.md](WINDOWS.md) for Russian setup and submission instructions.
-Do not use slides: show the editor, terminal and GitHub Actions.
+Сначала runner получает исходники и устанавливает Java 17. Затем Maven выполняет
+`clean verify`: удаляет старые результаты сборки, компилирует код, запускает тесты
+и собирает JAR. Следующий шаг запускает калькулятор.
 
-## Sources
+Отчёты тестов сохраняются даже при падении теста благодаря `if: always()`.
+JAR сохраняется только после успешного выполнения предыдущих шагов.
+Оба артефакта доступны на странице запуска в течение 14 дней. Скачанный архив
+`calculator-jar` нужно распаковать, после чего JAR можно запустить через Java.
 
-- [GitHub Actions with Maven](https://docs.github.com/en/actions/tutorials/build-and-test-code/java-with-maven)
-- [Maven lifecycle](https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html)
-- [JUnit 5 guide](https://docs.junit.org/5.11.4/user-guide/)
+Кэш Maven ускоряет повторное скачивание зависимостей. Кэш и артефакты имеют разное назначение:
+первый нужен для последующих сборок, вторые содержат результаты конкретного запуска.
+Workflow использует `contents: read`; собственные токены и секреты не требуются.
+Развёртывание на сервере в этом проекте не выполняется.
+
+## Демонстрация ошибки
+
+В отдельной ветке заменяем в методе `subtract` выражение `a - b` на `a + b`.
+Тест `subtractsTwoNumbers` ожидает 5, но получает 11, поэтому сборка падает.
+После исправления кода тот же тест проходит. Менять ожидаемый результат теста не нужно.
+
+Пошаговый сценарий и текст выступления на английском находятся в [DEMO.md](DEMO.md).
+Настройка Windows и список действий перед сдачей — в [WINDOWS.md](WINDOWS.md).
+На защите показываются редактор, терминал и GitHub Actions, без презентации.
+
+## Документация
+
+- [Сборка Java-проекта с Maven в GitHub Actions](https://docs.github.com/en/actions/tutorials/build-and-test-code/java-with-maven)
+- [Жизненный цикл Maven](https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html)
+- [JUnit 5](https://docs.junit.org/5.11.4/user-guide/)
